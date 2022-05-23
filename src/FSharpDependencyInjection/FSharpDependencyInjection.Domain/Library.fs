@@ -1,5 +1,20 @@
 ﻿namespace FSharpDependencyInjection.Domain
 
-module Say =
-  let hello name =
-    printfn "Hello %s" name
+module DomainModel =
+  type DomainError =
+    | Unauthorized
+    | NotFound
+    | Conflict
+
+  type User =
+    { Name: string
+      ID: int
+      Email: string }
+
+  type UserSettings =
+    { AreNotificationsEnabled: bool
+      UserID: int }
+    
+  type Device =
+    { UserID: int
+      ID: int }
