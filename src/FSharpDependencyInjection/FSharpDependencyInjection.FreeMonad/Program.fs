@@ -57,7 +57,11 @@ let x =
     let! user = getUser 5
     let! settings = getSettings user.ID
     let! device = getDevice user.ID
-    return (device, settings)
+
+    return
+      {| DeviceID = device.ID
+         ShouldSendEmail = settings.AreNotificationsEnabled
+         Email = user.Email |}
   }
 
 let result = Interpreters.interpreter x
