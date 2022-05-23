@@ -57,7 +57,7 @@ let x =
     let! user = getUser 5
     let! settings = getSettings user.ID
     let! device = getDevice user.ID
-    return device
+    return (device, settings)
   }
 
 let result = Interpreters.interpreter x
