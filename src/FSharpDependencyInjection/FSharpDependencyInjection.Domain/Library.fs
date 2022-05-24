@@ -5,6 +5,7 @@ module DomainModel =
     | Unauthorized of protectedResourceName: string
     | NotFound of resourceName: string
     | Conflict
+    | InternalServerError of errorMessage: string
 
   type User =
     { Name: string
@@ -26,9 +27,11 @@ module DomainModel =
 
   let renderError =
     function
-     | Unauthorized protectedResourceName ->
-       $"Tried to access {protectedResourceName} but had no permissions"
-     | Conflict ->
-       "System in invalid state"
-     | NotFound resourceName ->
-       $"Could not find a resource of type {resourceName}"
+    | Unauthorized protectedResourceName ->
+      $"Tried to access {protectedResourceName} but had no permissions"
+    | Conflict ->
+      "System in invalid state"
+    | NotFound resourceName ->
+      $"Could not find a resource of type {resourceName}"
+    | InternalServerError message ->
+      $"All hell broke loose: {message}"
