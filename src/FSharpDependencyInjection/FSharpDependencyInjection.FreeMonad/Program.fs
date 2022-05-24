@@ -1,7 +1,9 @@
-﻿open FSharpDependencyInjection.Domain.DomainModel
+﻿open FSharpDependencyInjection.Domain
+open FSharpDependencyInjection.Domain.DomainModel
 open DSL
 open InstructionDefinitions.Email
 open InstructionDefinitions.User
+open ErrorHandling
 
 type FinalResult =
   { DeviceID: int
