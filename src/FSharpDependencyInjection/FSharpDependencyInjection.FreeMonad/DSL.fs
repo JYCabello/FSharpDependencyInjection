@@ -18,8 +18,9 @@ type DSLBuilder () =
   member this.Return x = Pure x
   member this.ReturnFrom x = x
   member this.Zero () = Pure ()
-  member this.Combine (a, b) =
-    b |> bind (fun _ -> a)
+  // The order in which this happens should be irrelevant for our use case.
+  // Enforcing a unit in the end guarantees that is only called for effects.
+  member this.Combine (a, b) = a |> bind (fun _ -> b) |> bind (fun _ -> Pure ())
     
 
 let dsl = DSLBuilder()
