@@ -58,12 +58,10 @@ module Interpreters =
 
   let (>>=) x f = AsyncResult.bind f x 
   let rec build userInt emailInt =
-    let recursion = build userInt emailInt
-
     function
     | Pure p -> AsyncResult.ok p
-    | UserProgram u -> u |> userInt >>= recursion
-    | EmailProgram e -> e |> emailInt >>= recursion
+    | UserProgram u -> u |> userInt >>= build userInt emailInt
+    | EmailProgram e -> e |> emailInt >>= build userInt emailInt
 
 let result userID =
   program userID
