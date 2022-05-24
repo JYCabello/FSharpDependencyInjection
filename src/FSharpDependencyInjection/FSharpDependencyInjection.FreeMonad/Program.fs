@@ -32,13 +32,10 @@ module ImpureInstructions =
 module Effects =
   open FsToolkit.ErrorHandling
 
-  type Error = string
-  type Effect<'a> = Async<Result<'a, Error>>
+  let ofResult r: Async<Result<'a, 'e>> = r |> Async.singleton
+  let singleton x: Async<Result<'a, 'e>> = x |> Ok |> ofResult
 
-  let ofResult r: Async<Result<'a, Error>> = r |> Async.singleton
-  let singleton x: Async<Result<'a, Error>> = x |> Ok |> ofResult
-
-  let bind (f: 'a -> Async<Result<'b, Error>>) (x: Async<Result<'a, Error>>): Async<Result<'b, Error>> = 
+  let bind (f: 'a -> Async<Result<'b, 'e>>) (x: Async<Result<'a, 'e>>): Async<Result<'b, 'e>> = 
     asyncResult {
       let! value = x
       return! f value
@@ -46,30 +43,15 @@ module Effects =
 
   let (>>=) x f = bind f x 
   
-module UserInstructionsElevations =
+module UserInstructionsDefinitions =
   open ImpureInstructions
   let getUser id = Free (GetUser (id, Pure))
   let getSettings userId = Free (GetSettings (userId, Pure))
   let getDevice userId = Free (GetDevice (userId, Pure))
 
-module Interpreters =
-  open ImpureInstructions
-  open Effects
-  open FsToolkit.ErrorHandling
-  let findUser id = singleton { ID = id; Name = "Name"; Email = "email@email.com" }
-  let findSettings userId = { UserID = userId; AreNotificationsEnabled = true }
-  let findDevice userId = { UserID = userId; ID = userId + 7 }
-  
-  let rec interpreter =
-    function
-    | Pure x -> singleton x
-    | Free (GetUser (x, next)) -> findUser x |> AsyncResult.map next >>= interpreter
-    | Free (GetSettings (x, next)) -> x |> findSettings |> next |> interpreter
-    | Free (GetDevice (x, next)) -> x |> findDevice |> next |> interpreter
-
   
 open ImpureInstructions
-open UserInstructionsElevations
+open UserInstructionsDefinitions
 open FsToolkit.ErrorHandling
 
 type FinalResult =
@@ -89,13 +71,30 @@ let program =
         Email = user.Email }
   }
 
+module Interpreters =
+  open Effects
+  let findUser id = async { return Ok { ID = id; Name = "Name"; Email = "email@email.com" } }
+  let findSettings userId = async { return Ok { UserID = userId; AreNotificationsEnabled = true } }
+  let findDevice userId = { UserID = userId; ID = userId + 7 }
+  
+  let rec interpreter userProgram =
+    match userProgram with
+    | Pure x -> singleton x
+    | Free (GetUser (x, next)) -> findUser x |> AsyncResult.map next >>= interpreter
+    | Free (GetSettings (x, next)) -> x |> findSettings |> AsyncResult.map next >>= interpreter
+    | Free (GetDevice (x, next)) -> x |> findDevice |> next |> interpreter
+
 let result =
   program
   |> Interpreters.interpreter
   |> Async.RunSynchronously
   |> function
      | Ok value -> $"%A{value}"
-     | Error errorValue -> errorValue
+     | Error errorValue ->
+       match errorValue with
+       | Unauthorized protectedResourceName -> $"Tried to access {protectedResourceName} but had no permissions"
+       | Conflict -> "System in invalid state"
+       | NotFound resourceName -> $"Could not find a resource of type {resourceName}"
 
 // For more information see https://aka.ms/fsharp-
 printfn $"%A{result}"

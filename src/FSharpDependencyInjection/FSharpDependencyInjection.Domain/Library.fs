@@ -2,8 +2,8 @@
 
 module DomainModel =
   type DomainError =
-    | Unauthorized
-    | NotFound
+    | Unauthorized of protectedResourceName: string
+    | NotFound of resourceName: string
     | Conflict
 
   type User =
