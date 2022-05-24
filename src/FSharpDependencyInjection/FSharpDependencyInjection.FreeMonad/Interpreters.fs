@@ -4,9 +4,16 @@ open FsToolkit.ErrorHandling
 open DSL
 open DomainModel
 
+let (>>=) x f = AsyncResult.bind f x 
+let rec build userInt emailInt =
+  function
+  | Pure p -> AsyncResult.ok p
+  | UserProgram u -> u |> userInt >>= build userInt emailInt
+  | EmailProgram e -> e |> emailInt >>= build userInt emailInt
+
 module User =
   open UserDsl
-  
+
   let findUser id =
     match id with
     | 2 -> AsyncResult.error <| Unauthorized "user"
@@ -36,10 +43,3 @@ module Email =
   let interpreter =
     function
     | Send (envelope, next) -> sendEmail envelope |> AsyncResult.map next
-
-let (>>=) x f = AsyncResult.bind f x 
-let rec build userInt emailInt =
-  function
-  | Pure p -> AsyncResult.ok p
-  | UserProgram u -> u |> userInt >>= build userInt emailInt
-  | EmailProgram e -> e |> emailInt >>= build userInt emailInt
