@@ -35,10 +35,10 @@ module Effects =
   type Error = string
   type Effect<'a> = Async<Result<'a, Error>>
 
-  let ofResult r: Effect<'a> = r |> Async.singleton
-  let singleton x: Effect<'a> = x |> Ok |> ofResult
+  let ofResult r: Async<Result<'a, Error>> = r |> Async.singleton
+  let singleton x: Async<Result<'a, Error>> = x |> Ok |> ofResult
 
-  let bind (f: 'a -> Effect<'b>) (x: Effect<'a>): Effect<'b> = 
+  let bind (f: 'a -> Async<Result<'b, Error>>) (x: Async<Result<'a, Error>>): Async<Result<'b, Error>> = 
     asyncResult {
       let! value = x
       return! f value
@@ -55,17 +55,17 @@ module UserInstructionsElevations =
 module Interpreters =
   open ImpureInstructions
   open Effects
-  let findUser id = { ID = id; Name = "Name"; Email = "email@email.com" }
+  open FsToolkit.ErrorHandling
+  let findUser id = singleton { ID = id; Name = "Name"; Email = "email@email.com" }
   let findSettings userId = { UserID = userId; AreNotificationsEnabled = true }
   let findDevice userId = { UserID = userId; ID = userId + 7 }
   
   let rec interpreter =
     function
     | Pure x -> singleton x
-    | Free (GetUser (x, next)) -> x |> findUser |> next |> interpreter
+    | Free (GetUser (x, next)) -> findUser x |> AsyncResult.map next >>= interpreter
     | Free (GetSettings (x, next)) -> x |> findSettings |> next |> interpreter
     | Free (GetDevice (x, next)) -> x |> findDevice |> next |> interpreter
-
 
   
 open ImpureInstructions
@@ -77,7 +77,7 @@ type FinalResult =
     ShouldSendEmail: bool
     Email: string }
 
-let x =
+let program =
   user {
     let! user = getUser 5
     let! settings = getSettings user.ID
@@ -90,14 +90,12 @@ let x =
   }
 
 let result =
-  Interpreters.interpreter x
+  program
+  |> Interpreters.interpreter
   |> Async.RunSynchronously
   |> function
      | Ok value -> $"%A{value}"
      | Error errorValue -> errorValue
 
-
-
-  
 // For more information see https://aka.ms/fsharp-
 printfn $"%A{result}"
