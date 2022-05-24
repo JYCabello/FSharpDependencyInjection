@@ -1,25 +1,5 @@
 ﻿open FSharpDependencyInjection.Domain.DomainModel
 
-module UserDomain =
-  type UserInstructions<'a> =  
-  | GetUser of (int * (User -> 'a))
-  | GetSettings of (int * (UserSettings -> 'a))
-  | GetDevice of (int * (Device -> 'a))
-  
-  let mapUser f =
-    function
-    | GetUser (id, next) -> GetUser (id, next >> f)
-    | GetSettings (userID, next) -> GetSettings (userID, next >> f)
-    | GetDevice (userID, next) -> GetDevice (userID, next >> f)
-
-module EmailDomain =
-  type EmailInstructions<'a> =
-  | Send of (EmailEnvelope * (Unit -> 'a))
-  
-  let mapEmail f =
-    function
-    | Send (emailEnvelope, next) -> Send(emailEnvelope, next >> f)
-
 module FreeProgram =
   open UserDomain
   open EmailDomain
