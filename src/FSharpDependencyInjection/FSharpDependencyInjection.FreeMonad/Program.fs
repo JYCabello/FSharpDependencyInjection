@@ -1,8 +1,8 @@
 ﻿open FSharpDependencyInjection.Domain.DomainModel
 
 module FreeProgram =
-  open UserDomain
-  open EmailDomain
+  open UserDsl
+  open EmailDsl
 
   type Program<'a> =
   | Pure of 'a
@@ -15,24 +15,24 @@ module FreeProgram =
     | UserProgram up -> up |> mapUser (bind f) |> UserProgram
     | EmailProgram ep -> ep |> mapEmail (bind f) |> EmailProgram
     
-  type DomainBuilder () =
+  type DSLBuilder () =
     member this.Bind (x, f) = bind f x
     member this.Return x = Pure x
     member this.ReturnFrom x = x
     member this.Zero () = Pure ()
     
-  let domainLanguage = DomainBuilder()
+  let dsl = DSLBuilder()
   
 module UserInstructionsDefinitions =
   open FreeProgram
-  open UserDomain
+  open UserDsl
   let getUser id = UserProgram (GetUser (id, Pure))
   let getSettings userId = UserProgram (GetSettings (userId, Pure))
   let getDevice userId = UserProgram (GetDevice (userId, Pure))
 
 module EmailInstructionsDefinitions =
   open FreeProgram
-  open EmailDomain
+  open EmailDsl
   let send envelope = EmailProgram (Send (envelope, Pure))
   
 open FreeProgram
@@ -45,7 +45,7 @@ type FinalResult =
     Email: string }
 
 let program userID =
-  domainLanguage {
+  dsl {
     let! user = getUser userID
     let! settings = getSettings userID
     let! device = getDevice userID
@@ -61,7 +61,7 @@ let program userID =
 module Interpreters =
   open FsToolkit.ErrorHandling
   module User =
-    open UserDomain
+    open UserDsl
     
     let findUser id =
       match id with
@@ -85,7 +85,7 @@ module Interpreters =
       | GetDevice (x, next) -> x |> findDevice |> Result.map next |> Async.singleton
 
   module Email =
-    open EmailDomain
+    open EmailDsl
     let sendEmail (_: EmailEnvelope) = () |> AsyncResult.ok
     
     let interpreter =

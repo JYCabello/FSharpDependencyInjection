@@ -1,4 +1,4 @@
-﻿module UserDomain
+﻿module UserDsl
 open FSharpDependencyInjection.Domain.DomainModel
 
 type UserInstructions<'a> =  

@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="UserDomain.fs" />
-        <Compile Include="EmailDomain.fs" />
+        <Compile Include="UserDsl.fs" />
+        <Compile Include="EmailDsl.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 

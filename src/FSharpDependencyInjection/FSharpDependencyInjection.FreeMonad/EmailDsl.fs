@@ -1,4 +1,4 @@
-﻿module EmailDomain
+﻿module EmailDsl
 
 open FSharpDependencyInjection.Domain.DomainModel
 
