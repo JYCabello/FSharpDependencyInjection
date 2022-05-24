@@ -13,4 +13,9 @@
       <ProjectReference Include="..\FSharpDependencyInjection.Domain\FSharpDependencyInjection.Domain.fsproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Chessie" Version="0.6.0" />
+      <PackageReference Include="FsToolkit.ErrorHandling" Version="2.13.0" />
+    </ItemGroup>
+
 </Project>
