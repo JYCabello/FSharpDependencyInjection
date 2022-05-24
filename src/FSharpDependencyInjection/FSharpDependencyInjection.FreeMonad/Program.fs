@@ -25,12 +25,13 @@ let trySendDeviceViaEmail userID =
 let execute program userID =
   program userID
   |> Interpreters.build Interpreters.User.interpreter Interpreters.Email.interpreter
+  |> attempt
   |> Async.RunSynchronously
   |> function
       | Ok _ -> $"Successfully completed with id {userID}"
       | Error error -> renderError error
 
-[1..5]
+[1..10]
 |> List.map (execute trySendDeviceViaEmail)
 |> List.map (printfn "%s")
 |> ignore
