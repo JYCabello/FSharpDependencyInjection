@@ -18,5 +18,8 @@ type DSLBuilder () =
   member this.Return x = Pure x
   member this.ReturnFrom x = x
   member this.Zero () = Pure ()
+  member this.Combine (a, b) =
+    b |> bind (fun _ -> a)
+    
 
 let dsl = DSLBuilder()

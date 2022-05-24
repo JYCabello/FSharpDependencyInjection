@@ -14,12 +14,10 @@ let program userID =
     let! settings = getSettings userID
     let! device = getDevice userID
 
-    let emailOperation =
+    return!
       match settings.AreNotificationsEnabled with
       | false -> Pure ()
       | true -> send { To = user.Email; Subject = "Hi"; Body = $"Your device ID is {device.ID}" }
-      
-    return! emailOperation
   }
 
 let result userID =
