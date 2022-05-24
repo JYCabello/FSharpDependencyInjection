@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <WarningsAsErrors>FS0025</WarningsAsErrors>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="UserDsl.fs" />
+        <Compile Include="EmailDsl.fs" />
+        <Compile Include="DSL.fs" />
+        <Compile Include="InstructionDefinitions.fs" />
+        <Compile Include="Interpreters.fs" />
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\FSharpDependencyInjection.Domain\FSharpDependencyInjection.Domain.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Chessie" Version="0.6.0" />
+      <PackageReference Include="FsToolkit.ErrorHandling" Version="2.13.0" />
+    </ItemGroup>
+
+</Project>
