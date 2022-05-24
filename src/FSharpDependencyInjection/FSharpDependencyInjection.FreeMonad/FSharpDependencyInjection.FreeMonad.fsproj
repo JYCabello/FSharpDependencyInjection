@@ -11,6 +11,7 @@
         <Compile Include="EmailDsl.fs" />
         <Compile Include="DSL.fs" />
         <Compile Include="InstructionDefinitions.fs" />
+        <Compile Include="Interpreters.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
