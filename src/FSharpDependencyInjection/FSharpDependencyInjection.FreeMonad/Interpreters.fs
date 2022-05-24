@@ -20,6 +20,7 @@ module User =
   let findDevice userID =
     match userID with
     | 4 -> Error <| NotFound "device"
+    | 7 -> failwith "A weird happenstance"
     | _ -> Ok { UserID = userID; ID = userID + 7 }
 
   let interpreter =
