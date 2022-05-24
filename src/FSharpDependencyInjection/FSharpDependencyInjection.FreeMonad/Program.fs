@@ -73,20 +73,25 @@ let program =
 
 module Interpreters =
   open Effects
-  let findUser id = async { return Ok { ID = id; Name = "Name"; Email = "email@email.com" } }
-  let findSettings userId = async { return Ok { UserID = userId; AreNotificationsEnabled = true } }
-  let findDevice userId = { UserID = userId; ID = userId + 7 }
+  module User =
+    let findUser id = async { return Ok { ID = id; Name = "Name"; Email = "email@email.com" } }
+    let findSettings userId = Ok { UserID = userId; AreNotificationsEnabled = true }
+    let findDevice userId = { UserID = userId; ID = userId + 7 }
+    
+    let interpreter =
+      function
+      | GetUser (x, next) -> findUser x |> AsyncResult.map next
+      | GetSettings (x, next) -> x |> findSettings |> Result.map next |> ofResult
+      | GetDevice (x, next) -> x |> findDevice |> next |> AsyncResult.ok
   
-  let rec interpreter userProgram =
-    match userProgram with
-    | Pure x -> singleton x
-    | Free (GetUser (x, next)) -> findUser x |> AsyncResult.map next >>= interpreter
-    | Free (GetSettings (x, next)) -> x |> findSettings |> AsyncResult.map next >>= interpreter
-    | Free (GetDevice (x, next)) -> x |> findDevice |> next |> interpreter
+  let rec interpreter userInterpreter =
+    function
+    | Pure p -> singleton p
+    | Free f -> f |> userInterpreter >>= interpreter userInterpreter
 
 let result =
   program
-  |> Interpreters.interpreter
+  |> Interpreters.interpreter Interpreters.User.interpreter
   |> Async.RunSynchronously
   |> function
      | Ok value -> $"%A{value}"
