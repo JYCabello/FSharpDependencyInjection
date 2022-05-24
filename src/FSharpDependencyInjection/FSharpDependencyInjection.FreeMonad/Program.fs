@@ -72,10 +72,8 @@ let program userID =
 
     let emailOperation =
       match settings.AreNotificationsEnabled with
-      | false ->
-        Pure ()
-      | true ->
-        send { To = user.Email; Subject = "Hi"; Body = $"How are you?, your device ID is {device.ID}" }
+      | false -> Pure ()
+      | true -> send { To = user.Email; Subject = "Hi"; Body = $"Your device ID is {device.ID}" }
       
     return! emailOperation
   }
