@@ -8,37 +8,40 @@ module UserDomain =
   
   let mapUser f =
     function
-    | GetUser (x, next) -> GetUser (x, next >> f)
-    | GetSettings (x, next) -> GetSettings (x, next >> f)
-    | GetDevice (x, next) -> GetDevice (x, next >> f)
+    | GetUser (id, next) -> GetUser (id, next >> f)
+    | GetSettings (userID, next) -> GetSettings (userID, next >> f)
+    | GetDevice (userID, next) -> GetDevice (userID, next >> f)
 
 module EmailDomain =
   type EmailInstructions<'a> =
-  | SendEmail of (EmailEnvelope * (Unit -> 'a))
+  | Send of (EmailEnvelope * (Unit -> 'a))
   
   let mapEmail f =
     function
-    | SendEmail(emailEnvelope, next) -> SendEmail(emailEnvelope, next >> f)
+    | Send (emailEnvelope, next) -> Send(emailEnvelope, next >> f)
 
 module FreeProgram =
   open UserDomain
+  open EmailDomain
 
   type Program<'a> =
-  | UserProgram of UserInstructions<Program<'a>>
   | Pure of 'a
+  | UserProgram of UserInstructions<Program<'a>>
+  | EmailProgram of EmailInstructions<Program<'a>>
   
   let rec bind f =
     function
-    | UserProgram x -> x |> mapUser (bind f) |> UserProgram
-    | Pure x -> f x
+    | Pure p -> f p
+    | UserProgram up -> up |> mapUser (bind f) |> UserProgram
+    | EmailProgram ep -> ep |> mapEmail (bind f) |> EmailProgram
     
-  type UserBuilder () =
+  type DomainBuilder () =
     member this.Bind (x, f) = bind f x
     member this.Return x = Pure x
     member this.ReturnFrom x = x
     member this.Zero () = Pure ()
     
-  let user = UserBuilder()
+  let domainLanguage = DomainBuilder()
   
 module UserInstructionsDefinitions =
   open FreeProgram
@@ -47,54 +50,88 @@ module UserInstructionsDefinitions =
   let getSettings userId = UserProgram (GetSettings (userId, Pure))
   let getDevice userId = UserProgram (GetDevice (userId, Pure))
 
+module EmailInstructionsDefinitions =
+  open FreeProgram
+  open EmailDomain
+  let send envelope = EmailProgram (Send (envelope, Pure))
   
 open FreeProgram
 open UserInstructionsDefinitions
+open EmailInstructionsDefinitions
 
 type FinalResult =
   { DeviceID: int
     ShouldSendEmail: bool
     Email: string }
 
-let program =
-  user {
-    let! user = getUser 5
-    let! settings = getSettings user.ID
-    let! device = getDevice user.ID
+let program userID =
+  domainLanguage {
+    let! user = getUser userID
+    let! settings = getSettings userID
+    let! device = getDevice userID
 
-    return
-      { DeviceID = device.ID
-        ShouldSendEmail = settings.AreNotificationsEnabled
-        Email = user.Email }
+    let emailOperation =
+      match settings.AreNotificationsEnabled with
+      | false ->
+        Pure ()
+      | true ->
+        send { To = user.Email; Subject = "Hi"; Body = $"How are you?, your device ID is {device.ID}" }
+      
+    return! emailOperation
   }
 
 module Interpreters =
   open FsToolkit.ErrorHandling
   module User =
     open UserDomain
-    let findUser id = async { return Ok { ID = id; Name = "Name"; Email = "email@email.com" } }
-    let findSettings userId = Ok { UserID = userId; AreNotificationsEnabled = true }
-    let findDevice userId = { UserID = userId; ID = userId + 7 }
     
+    let findUser id =
+      match id with
+      | 2 -> AsyncResult.error <| Unauthorized "user"
+      | _ -> AsyncResult.ok { ID = id; Name = "Name"; Email = "email@email.com" }
+      
+    let findSettings userID =
+      match userID with
+      | 3 -> Error Conflict
+      | _ -> Ok { UserID = userID; AreNotificationsEnabled = true }
+      
+    let findDevice userID =
+      match userID with
+      | 4 -> Error <| NotFound "device"
+      | _ -> Ok { UserID = userID; ID = userID + 7 }
+
     let interpreter =
       function
       | GetUser (x, next) -> findUser x |> AsyncResult.map next
       | GetSettings (x, next) -> x |> findSettings |> Result.map next |> Async.singleton
-      | GetDevice (x, next) -> x |> findDevice |> next |> AsyncResult.ok
-  
+      | GetDevice (x, next) -> x |> findDevice |> Result.map next |> Async.singleton
+
+  module Email =
+    open EmailDomain
+    let sendEmail (_: EmailEnvelope) = () |> AsyncResult.ok
+    
+    let interpreter =
+      function
+      | Send (envelope, next) -> sendEmail envelope |> AsyncResult.map next
+
   let (>>=) x f = AsyncResult.bind f x 
-  let rec build userInterpreter =
+  let rec build userInt emailInt =
+    let recursion = build userInt emailInt
+
     function
     | Pure p -> AsyncResult.ok p
-    | UserProgram f -> f |> userInterpreter >>= build userInterpreter
+    | UserProgram u -> u |> userInt >>= recursion
+    | EmailProgram e -> e |> emailInt >>= recursion
 
-let result =
-  program
-  |> Interpreters.build Interpreters.User.interpreter
+let result userID =
+  program userID
+  |> Interpreters.build Interpreters.User.interpreter Interpreters.Email.interpreter
   |> Async.RunSynchronously
   |> function
-      | Ok value -> $"%A{value}"
+      | Ok _ -> $"Successfully completed with id {userID}"
       | Error error -> renderError error
 
-// For more information see https://aka.ms/fsharp-
-printfn $"%A{result}"
+[1..5]
+|> List.map result
+|> List.map (printfn "%s")
+|> ignore
