@@ -1,41 +1,18 @@
 ﻿open FSharpDependencyInjection.Domain.DomainModel
-
-module FreeProgram =
-  open UserDsl
-  open EmailDsl
-
-  type Program<'a> =
-  | Pure of 'a
-  | UserProgram of UserInstructions<Program<'a>>
-  | EmailProgram of EmailInstructions<Program<'a>>
-  
-  let rec bind f =
-    function
-    | Pure p -> f p
-    | UserProgram up -> up |> mapUser (bind f) |> UserProgram
-    | EmailProgram ep -> ep |> mapEmail (bind f) |> EmailProgram
-    
-  type DSLBuilder () =
-    member this.Bind (x, f) = bind f x
-    member this.Return x = Pure x
-    member this.ReturnFrom x = x
-    member this.Zero () = Pure ()
-    
-  let dsl = DSLBuilder()
   
 module UserInstructionsDefinitions =
-  open FreeProgram
+  open DSL
   open UserDsl
   let getUser id = UserProgram (GetUser (id, Pure))
   let getSettings userId = UserProgram (GetSettings (userId, Pure))
   let getDevice userId = UserProgram (GetDevice (userId, Pure))
 
 module EmailInstructionsDefinitions =
-  open FreeProgram
+  open DSL
   open EmailDsl
   let send envelope = EmailProgram (Send (envelope, Pure))
   
-open FreeProgram
+open DSL
 open UserInstructionsDefinitions
 open EmailInstructionsDefinitions
 
