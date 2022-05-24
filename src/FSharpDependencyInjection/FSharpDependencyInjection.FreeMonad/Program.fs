@@ -5,11 +5,6 @@ open InstructionDefinitions.Email
 open InstructionDefinitions.User
 open ErrorHandling
 
-type FinalResult =
-  { DeviceID: int
-    ShouldSendEmail: bool
-    Email: string }
-
 let trySendDeviceViaEmail userID =
   dsl {
     let! user = getUser userID
