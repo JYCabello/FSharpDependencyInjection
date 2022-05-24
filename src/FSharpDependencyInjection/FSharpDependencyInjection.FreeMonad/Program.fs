@@ -8,7 +8,7 @@ type FinalResult =
     ShouldSendEmail: bool
     Email: string }
 
-let program userID =
+let trySendDeviceViaEmail userID =
   dsl {
     let! user = getUser userID
     let! settings = getSettings userID
@@ -20,7 +20,7 @@ let program userID =
       | true -> send { To = user.Email; Subject = "Hi"; Body = $"Your device ID is {device.ID}" }
   }
 
-let result userID =
+let execute program userID =
   program userID
   |> Interpreters.build Interpreters.User.interpreter Interpreters.Email.interpreter
   |> Async.RunSynchronously
@@ -29,6 +29,6 @@ let result userID =
       | Error error -> renderError error
 
 [1..5]
-|> List.map result
+|> List.map (execute trySendDeviceViaEmail)
 |> List.map (printfn "%s")
 |> ignore
