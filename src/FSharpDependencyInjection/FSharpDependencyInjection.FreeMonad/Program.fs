@@ -12,6 +12,14 @@ module UserDomain =
     | GetSettings (x, next) -> GetSettings (x, next >> f)
     | GetDevice (x, next) -> GetDevice (x, next >> f)
 
+module EmailDomain =
+  type EmailInstructions<'a> =
+  | SendEmail of (EmailEnvelope * (Unit -> 'a))
+  
+  let mapEmail f =
+    function
+    | SendEmail(emailEnvelope, next) -> SendEmail(emailEnvelope, next >> f)
+
 module FreeProgram =
   open UserDomain
 
@@ -32,20 +40,6 @@ module FreeProgram =
     
   let user = UserBuilder()
   
-module Effects =
-  open FsToolkit.ErrorHandling
-
-  let ofResult r: Async<Result<'a, 'e>> = r |> Async.singleton
-  let singleton x: Async<Result<'a, 'e>> = x |> Ok |> ofResult
-
-  let bind (f: 'a -> Async<Result<'b, 'e>>) (x: Async<Result<'a, 'e>>): Async<Result<'b, 'e>> = 
-    asyncResult {
-      let! value = x
-      return! f value
-    }
-
-  let (>>=) x f = bind f x 
-  
 module UserInstructionsDefinitions =
   open FreeProgram
   open UserDomain
@@ -56,7 +50,6 @@ module UserInstructionsDefinitions =
   
 open FreeProgram
 open UserInstructionsDefinitions
-open FsToolkit.ErrorHandling
 
 type FinalResult =
   { DeviceID: int
@@ -76,7 +69,7 @@ let program =
   }
 
 module Interpreters =
-  open Effects
+  open FsToolkit.ErrorHandling
   module User =
     open UserDomain
     let findUser id = async { return Ok { ID = id; Name = "Name"; Email = "email@email.com" } }
@@ -86,12 +79,13 @@ module Interpreters =
     let interpreter =
       function
       | GetUser (x, next) -> findUser x |> AsyncResult.map next
-      | GetSettings (x, next) -> x |> findSettings |> Result.map next |> ofResult
+      | GetSettings (x, next) -> x |> findSettings |> Result.map next |> Async.singleton
       | GetDevice (x, next) -> x |> findDevice |> next |> AsyncResult.ok
   
+  let (>>=) x f = AsyncResult.bind f x 
   let rec build userInterpreter =
     function
-    | Pure p -> singleton p
+    | Pure p -> AsyncResult.ok p
     | UserProgram f -> f |> userInterpreter >>= build userInterpreter
 
 let result =

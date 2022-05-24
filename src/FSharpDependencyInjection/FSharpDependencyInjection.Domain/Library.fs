@@ -14,10 +14,15 @@ module DomainModel =
   type UserSettings =
     { AreNotificationsEnabled: bool
       UserID: int }
-    
+
   type Device =
     { UserID: int
       ID: int }
+
+  type EmailEnvelope =
+    { To: string
+      Subject: string
+      Body: string }
 
   let renderError =
     function
