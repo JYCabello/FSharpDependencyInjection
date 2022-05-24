@@ -10,6 +10,7 @@
         <Compile Include="UserDsl.fs" />
         <Compile Include="EmailDsl.fs" />
         <Compile Include="DSL.fs" />
+        <Compile Include="InstructionDefinitions.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
