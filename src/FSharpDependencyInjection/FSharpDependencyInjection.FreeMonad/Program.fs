@@ -1,24 +1,27 @@
 ﻿open FSharpDependencyInjection.Domain.DomainModel
 
-module ImpureInstructions =
+module UserDomain =
   type UserInstructions<'a> =  
   | GetUser of (int * (User -> 'a))
   | GetSettings of (int * (UserSettings -> 'a))
   | GetDevice of (int * (Device -> 'a))
   
-  let private mapI f =
+  let mapUser f =
     function
     | GetUser (x, next) -> GetUser (x, next >> f)
     | GetSettings (x, next) -> GetSettings (x, next >> f)
     | GetDevice (x, next) -> GetDevice (x, next >> f)
 
-  type UserProgram<'a> =
-  | Free of UserInstructions<UserProgram<'a>>
+module FreeProgram =
+  open UserDomain
+
+  type Program<'a> =
+  | UserProgram of UserInstructions<Program<'a>>
   | Pure of 'a
   
   let rec bind f =
     function
-    | Free x -> x |> mapI (bind f) |> Free
+    | UserProgram x -> x |> mapUser (bind f) |> UserProgram
     | Pure x -> f x
     
   type UserBuilder () =
@@ -44,13 +47,14 @@ module Effects =
   let (>>=) x f = bind f x 
   
 module UserInstructionsDefinitions =
-  open ImpureInstructions
-  let getUser id = Free (GetUser (id, Pure))
-  let getSettings userId = Free (GetSettings (userId, Pure))
-  let getDevice userId = Free (GetDevice (userId, Pure))
+  open FreeProgram
+  open UserDomain
+  let getUser id = UserProgram (GetUser (id, Pure))
+  let getSettings userId = UserProgram (GetSettings (userId, Pure))
+  let getDevice userId = UserProgram (GetDevice (userId, Pure))
 
   
-open ImpureInstructions
+open FreeProgram
 open UserInstructionsDefinitions
 open FsToolkit.ErrorHandling
 
@@ -74,6 +78,7 @@ let program =
 module Interpreters =
   open Effects
   module User =
+    open UserDomain
     let findUser id = async { return Ok { ID = id; Name = "Name"; Email = "email@email.com" } }
     let findSettings userId = Ok { UserID = userId; AreNotificationsEnabled = true }
     let findDevice userId = { UserID = userId; ID = userId + 7 }
@@ -84,22 +89,18 @@ module Interpreters =
       | GetSettings (x, next) -> x |> findSettings |> Result.map next |> ofResult
       | GetDevice (x, next) -> x |> findDevice |> next |> AsyncResult.ok
   
-  let rec interpreter userInterpreter =
+  let rec build userInterpreter =
     function
     | Pure p -> singleton p
-    | Free f -> f |> userInterpreter >>= interpreter userInterpreter
+    | UserProgram f -> f |> userInterpreter >>= build userInterpreter
 
 let result =
   program
-  |> Interpreters.interpreter Interpreters.User.interpreter
+  |> Interpreters.build Interpreters.User.interpreter
   |> Async.RunSynchronously
   |> function
-     | Ok value -> $"%A{value}"
-     | Error errorValue ->
-       match errorValue with
-       | Unauthorized protectedResourceName -> $"Tried to access {protectedResourceName} but had no permissions"
-       | Conflict -> "System in invalid state"
-       | NotFound resourceName -> $"Could not find a resource of type {resourceName}"
+      | Ok value -> $"%A{value}"
+      | Error error -> renderError error
 
 // For more information see https://aka.ms/fsharp-
 printfn $"%A{result}"
