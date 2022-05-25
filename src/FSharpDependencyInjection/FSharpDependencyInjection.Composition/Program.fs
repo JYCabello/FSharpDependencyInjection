@@ -48,7 +48,7 @@ module Implementations =
 
 module CompositionalRoot =
   open Implementations
-  let trySendEmailComposed =
+  let trySendEmailComposed() =
     trySendEmail findUser (findSettings >> Async.singleton) (findDevice >> Async.singleton) (sendEmail >> AsyncResult.ok)
 
-Endpoint.runOneToTen CompositionalRoot.trySendEmailComposed
+Endpoint.runOneToTen (CompositionalRoot.trySendEmailComposed())

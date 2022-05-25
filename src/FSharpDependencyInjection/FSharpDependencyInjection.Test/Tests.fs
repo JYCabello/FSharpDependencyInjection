@@ -16,10 +16,12 @@ let data : Object array array =
     (9, "All good with id 9")
     (10, "All good with id 10")
   |]
-  |> Array.map (fun (userID, result) -> [| userID :> Object; result :> Object |])
+  |> Array.collect (fun (userID, result) ->
+      [| FSharpDependencyInjection.Container.program() |]
+      |> Array.map (fun program -> [| userID :> Object; result :> Object; program :> Object |])
+  )
 
 open FSharpDependencyInjection.Domain.Endpoint
 [<Theory; MemberData("data")>]
-let ``My test`` userID expectation =
-  let assertProgram program = Assert.Equal(expectation, execute program userID)
-  assertProgram (FSharpDependencyInjection.Container.program())
+let ``My test`` userID expectation program =
+  Assert.Equal(expectation, execute program userID)
