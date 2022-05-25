@@ -36,8 +36,6 @@ type NotificationService(userRepository: UserRepository, emailClient: EmailClien
         | true -> emailClient.Send { To = user.Email; Subject = "Hi"; Body = $"Your device ID is {device.ID}" }
     }
 
-open ErrorHandling
-
 let provider =
   ServiceCollection()
     .AddSingleton<UserRepository>()
@@ -45,17 +43,5 @@ let provider =
     .AddSingleton<NotificationService>()
     .BuildServiceProvider()
 
-let execute program userID =
-  program userID
-  |> attempt
-  |> Async.RunSynchronously
-  |> function
-      | Ok _ -> $"All good with id {userID}"
-      | Error error -> renderError error
-
-let service = provider.GetService<NotificationService>()
-
-[1..10]
-|> List.map (execute service.TrySendEmail)
-|> List.map (printfn "%s")
-|> ignore
+Endpoint.runOneToTen
+  (provider.GetService<NotificationService>().TrySendEmail)

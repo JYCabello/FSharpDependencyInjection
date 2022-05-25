@@ -1,4 +1,5 @@
-﻿open FSharpDependencyInjection.Domain.DomainModel
+﻿open FSharpDependencyInjection.Domain
+open FSharpDependencyInjection.Domain.DomainModel
 open FsToolkit.ErrorHandling
 open FSharpDependencyInjection.Domain.ErrorHandling
 
@@ -45,20 +46,9 @@ module Implementations =
     
   let sendEmail (_: EmailEnvelope) = ()
 
-let execute program userID =
-  program userID
-  |> attempt
-  |> Async.RunSynchronously
-  |> function
-      | Ok _ -> $"All good with id {userID}"
-      | Error error -> renderError error
-
 module CompositionalRoot =
   open Implementations
   let trySendEmailComposed =
     trySendEmail findUser (findSettings >> Async.singleton) (findDevice >> Async.singleton) (sendEmail >> AsyncResult.ok)
 
-[1..10]
-|> List.map (execute CompositionalRoot.trySendEmailComposed)
-|> List.map (printfn "%s")
-|> ignore
+Endpoint.runOneToTen CompositionalRoot.trySendEmailComposed
