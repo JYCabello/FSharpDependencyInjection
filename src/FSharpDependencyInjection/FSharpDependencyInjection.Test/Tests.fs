@@ -2,6 +2,7 @@ module Tests
 
 open System
 open Xunit
+open FSharpDependencyInjection
 
 let data : Object array array =
   [|
@@ -17,12 +18,13 @@ let data : Object array array =
     (10, "All good with id 10")
   |]
   |> Array.collect (fun (userID, result) ->
-      [| FSharpDependencyInjection.Container.program()
-         FSharpDependencyInjection.Composition.CompositionalRoot.trySendEmailComposed() |]
+      [| Container.program()
+         Composition.CompositionalRoot.trySendEmailComposed()
+         FreeMonad.program |]
       |> Array.map (fun program -> [| userID :> Object; result :> Object; program :> Object |])
   )
 
 open FSharpDependencyInjection.Domain.Endpoint
 [<Theory; MemberData("data")>]
-let ``My test`` userID expectation program =
+let ``Every way of dependency injection provides the same output`` userID expectation program =
   Assert.Equal(expectation, execute program userID)
