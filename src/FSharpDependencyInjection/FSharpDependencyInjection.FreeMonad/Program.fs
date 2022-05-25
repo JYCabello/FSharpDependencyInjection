@@ -1,9 +1,9 @@
-﻿open FSharpDependencyInjection.Domain
+﻿module FSharpDependencyInjection.FreeMonad
+open FSharpDependencyInjection.Domain
 open FSharpDependencyInjection.Domain.DomainModel
 open DSL
 open InstructionDefinitions.Email
 open InstructionDefinitions.User
-open ErrorHandling
 
 let trySendDeviceViaEmail userID =
   dsl {

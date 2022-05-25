@@ -1,4 +1,5 @@
-﻿open FSharpDependencyInjection.Domain
+﻿module FSharpDependencyInjection.Container
+open FSharpDependencyInjection.Domain
 open FSharpDependencyInjection.Domain.DomainModel
 open FsToolkit.ErrorHandling
 open Microsoft.Extensions.DependencyInjection
@@ -36,12 +37,13 @@ type NotificationService(userRepository: UserRepository, emailClient: EmailClien
         | true -> emailClient.Send { To = user.Email; Subject = "Hi"; Body = $"Your device ID is {device.ID}" }
     }
 
-let provider =
+let provider() =
   ServiceCollection()
     .AddSingleton<UserRepository>()
     .AddSingleton<EmailClient>()
     .AddSingleton<NotificationService>()
     .BuildServiceProvider()
+    
+let program() = provider().GetService<NotificationService>().TrySendEmail
 
-Endpoint.runOneToTen
-  (provider.GetService<NotificationService>().TrySendEmail)
+Endpoint.runOneToTen (program())

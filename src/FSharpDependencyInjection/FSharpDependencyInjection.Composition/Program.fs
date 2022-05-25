@@ -1,7 +1,7 @@
-﻿open FSharpDependencyInjection.Domain
+﻿module FSharpDependencyInjection.Composition
+open FSharpDependencyInjection.Domain
 open FSharpDependencyInjection.Domain.DomainModel
 open FsToolkit.ErrorHandling
-open FSharpDependencyInjection.Domain.ErrorHandling
 
 module Operations =
   type GetUser = int -> Async<Result<User, DomainError>>
