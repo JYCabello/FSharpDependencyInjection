@@ -17,7 +17,8 @@ let data : Object array array =
     (10, "All good with id 10")
   |]
   |> Array.collect (fun (userID, result) ->
-      [| FSharpDependencyInjection.Container.program() |]
+      [| FSharpDependencyInjection.Container.program()
+         FSharpDependencyInjection.Composition.CompositionalRoot.trySendEmailComposed() |]
       |> Array.map (fun program -> [| userID :> Object; result :> Object; program :> Object |])
   )
 
