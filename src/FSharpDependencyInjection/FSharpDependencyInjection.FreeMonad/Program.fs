@@ -1,9 +1,9 @@
-﻿open FSharpDependencyInjection.Domain
+﻿module FSharpDependencyInjection.FreeMonad
+open FSharpDependencyInjection.Domain
 open FSharpDependencyInjection.Domain.DomainModel
 open DSL
 open InstructionDefinitions.Email
 open InstructionDefinitions.User
-open ErrorHandling
 
 let trySendDeviceViaEmail userID =
   dsl {
@@ -17,16 +17,11 @@ let trySendDeviceViaEmail userID =
       | true -> send { To = user.Email; Subject = "Hi"; Body = $"Your device ID is {device.ID}" }
   }
 
-let execute program userID =
-  program userID
-  |> Interpreters.build Interpreters.User.interpreter Interpreters.Email.interpreter
-  |> attempt
-  |> Async.RunSynchronously
-  |> function
-      | Ok _ -> $"Successfully completed with id {userID}"
-      | Error error -> renderError error
+let buildInterpreter () =
+  Interpreters.build Interpreters.User.interpreter Interpreters.Email.interpreter
 
-[1..10]
-|> List.map (execute trySendDeviceViaEmail)
-|> List.map (printfn "%s")
-|> ignore
+let program id =
+  trySendDeviceViaEmail id
+  |> buildInterpreter ()
+
+Endpoint.runOneToTen program

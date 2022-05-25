@@ -6,6 +6,10 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharpDependencyInjection.F
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharpDependencyInjection.Composition", "FSharpDependencyInjection.Composition\FSharpDependencyInjection.Composition.fsproj", "{4E4A4037-F0EB-4E6D-9A54-97D92FC34C68}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharpDependencyInjection.Container", "FSharpDependencyInjection.Container\FSharpDependencyInjection.Container.fsproj", "{B7A71B4D-3779-4750-8B18-888C5304746E}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharpDependencyInjection.Test", "FSharpDependencyInjection.Test\FSharpDependencyInjection.Test.fsproj", "{7580D448-5B40-4040-AED0-378FA76D901B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +28,13 @@ Global
 		{4E4A4037-F0EB-4E6D-9A54-97D92FC34C68}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E4A4037-F0EB-4E6D-9A54-97D92FC34C68}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E4A4037-F0EB-4E6D-9A54-97D92FC34C68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7A71B4D-3779-4750-8B18-888C5304746E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7A71B4D-3779-4750-8B18-888C5304746E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7A71B4D-3779-4750-8B18-888C5304746E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7A71B4D-3779-4750-8B18-888C5304746E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7580D448-5B40-4040-AED0-378FA76D901B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7580D448-5B40-4040-AED0-378FA76D901B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7580D448-5B40-4040-AED0-378FA76D901B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7580D448-5B40-4040-AED0-378FA76D901B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

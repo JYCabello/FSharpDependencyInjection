@@ -9,6 +9,7 @@
     <ItemGroup>
         <Compile Include="Domain.fs" />
         <Compile Include="ErrorHandling.fs" />
+        <Compile Include="Endpoint.fs" />
     </ItemGroup>
 
     <ItemGroup>
