@@ -27,23 +27,23 @@ let trySendEmail
     }
 
 module Implementations =
-  let findUser id =
-    match id with
+  let findUser =
+    function
     | 2 -> AsyncResult.error <| Unauthorized "user"
-    | _ -> AsyncResult.ok { ID = id; Name = "Name"; Email = "email@email.com" }
+    | id -> AsyncResult.ok { ID = id; Name = "Name"; Email = "email@email.com" }
     
-  let findSettings userID =
-    match userID with
+  let findSettings =
+    function
     | 3 -> Error Conflict
-    | _ -> Ok { UserID = userID; AreNotificationsEnabled = true }
+    | userID -> Ok { UserID = userID; AreNotificationsEnabled = true }
     
-  let findDevice userID =
-    match userID with
+  let findDevice =
+    function
     | 4 -> Error <| NotFound "device"
     | 7 -> failwith "A weird happenstance"
-    | _ -> Ok { UserID = userID; ID = userID + 7 }
+    | userID -> Ok { UserID = userID; ID = userID + 7 }
     
-  let sendEmail (_: EmailEnvelope) = () |> AsyncResult.ok
+  let sendEmail (_: EmailEnvelope) = ()
 
 let execute program userID =
   program userID
@@ -56,7 +56,7 @@ let execute program userID =
 module CompositionalRoot =
   open Implementations
   let trySendEmailComposed =
-    trySendEmail findUser (findSettings >> Async.singleton) (findDevice >> Async.singleton) sendEmail
+    trySendEmail findUser (findSettings >> Async.singleton) (findDevice >> Async.singleton) (sendEmail >> AsyncResult.ok)
 
 [1..10]
 |> List.map (execute CompositionalRoot.trySendEmailComposed)
