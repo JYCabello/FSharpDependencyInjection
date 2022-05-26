@@ -28,29 +28,19 @@ let trySendEmail
       match settings.AreNotificationsEnabled with
       | false -> () |> AsyncResult.ok
       | true ->
-        sendEmail
-          { To = user.Email
-            Subject = "Hi"
-            Body = $"Your device ID is {device.ID}" }
+        sendEmail { To = user.Email; Subject = "Hi"; Body = $"Your device ID is {device.ID}" }
   }
 
 module Implementations =
   let findUser =
     function
     | 2 -> AsyncResult.error <| Unauthorized "user"
-    | id ->
-      AsyncResult.ok
-        { ID = id
-          Name = "Name"
-          Email = "email@email.com" }
+    | id -> AsyncResult.ok { ID = id; Name = "Name"; Email = "email@email.com" }
 
   let findSettings =
     function
     | 3 -> Error Conflict
-    | userID ->
-      Ok
-        { UserID = userID
-          AreNotificationsEnabled = true }
+    | userID -> Ok { UserID = userID; AreNotificationsEnabled = true }
 
   let findDevice =
     function
