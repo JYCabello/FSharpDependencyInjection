@@ -12,17 +12,24 @@ type Ports =
     member this.runQuery _ defaultValue = defaultValue |> AsyncResult.ok
     member this.sendEmail _ = () |> AsyncResult.ok
 
-type Effect<'a, 'b> = IPorts -> Async<Result<'a, 'b>>
+type Effect<'a> = IPorts -> Async<Result<'a, DomainError>>
 
-let mapE (f: 'a -> 'b) (e: Effect<'a, 'e>) : Effect<'b, 'e> = fun p -> p |> e |> AsyncResult.map f
+let mapE (f: 'a -> 'b) (e: Effect<'a>) : Effect<'b> = fun p -> p |> e |> AsyncResult.map f
 
-let bindE (f: 'a -> Async<Result<'b, 'e>>) (e: Effect<'a, 'e>) : Effect<'b, 'e> =
-  fun p -> p |> e |> AsyncResult.bind f
+let bindE (f: 'a -> Effect<'b>) (e: Effect<'a>) : Effect<'b> =
+  fun p ->
+    asyncResult {
+      let! a = e p
+      return! p |> f a
+    }
 
-type GetUser = int -> Effect<User, DomainError>
-type GetSettings = int -> Effect<UserSettings, DomainError>
-type GetDevice = int -> Effect<Device, DomainError>
-type SendEmail = EmailEnvelope -> Effect<Unit, DomainError>
+type EffectBuilder() =
+  member this.Bind(x: Effect<'a>, f) : Effect<'b> = bindE f x
+  member this.Return x : Effect<'a> = fun _ -> AsyncResult.ok x
+  member this.ReturnFrom x = fun (_:IPorts) -> x
+  member this.Zero() : Effect<Unit> = fun _ -> AsyncResult.ok ()
+
+let effect = EffectBuilder()
 
 let findUser id (p: IPorts) =
   match id with
@@ -39,6 +46,12 @@ let findDevice id (p: IPorts) =
   | 4 -> AsyncResult.error <| NotFound "device"
   | 7 -> failwith "A weird happenstance"
   | userID -> p.runQuery "query" { UserID = userID; ID = userID + 7 }
+
+let trySendDeviceID userID : Effect<_> =
+  effect {
+    let! user = findUser userID
+    return user
+  }
 
 let program () : int -> Async<Result<Unit, DomainError>> =
   fun _ -> "not implmemented" |> InternalServerError |> AsyncResult.error
