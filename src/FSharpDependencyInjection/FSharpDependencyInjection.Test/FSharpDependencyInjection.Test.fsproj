@@ -30,6 +30,7 @@
       <ProjectReference Include="..\FSharpDependencyInjection.Container\FSharpDependencyInjection.Container.fsproj" />
       <ProjectReference Include="..\FSharpDependencyInjection.Domain\FSharpDependencyInjection.Domain.fsproj" />
       <ProjectReference Include="..\FSharpDependencyInjection.FreeMonad\FSharpDependencyInjection.FreeMonad.fsproj" />
+      <ProjectReference Include="..\FSharpDependencyInjection.Reader\FSharpDependencyInjection.Reader.fsproj" />
     </ItemGroup>
 
 </Project>

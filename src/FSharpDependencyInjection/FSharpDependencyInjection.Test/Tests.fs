@@ -20,7 +20,8 @@ let data : Object array array =
   |> Array.collect (fun (userID, result) ->
       [| Container.program()
          Composition.CompositionalRoot.trySendEmailComposed()
-         FreeMonad.program |]
+         FreeMonad.program
+         Reader.program() |]
       |> Array.map (fun program -> [| userID :> Object; result :> Object; program :> Object |])
   )
 
