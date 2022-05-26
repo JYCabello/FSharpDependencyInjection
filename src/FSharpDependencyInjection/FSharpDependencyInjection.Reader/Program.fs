@@ -24,6 +24,21 @@ type GetSettings = int -> Effect<UserSettings, DomainError>
 type GetDevice = int -> Effect<Device, DomainError>
 type SendEmail = EmailEnvelope -> Effect<Unit, DomainError>
 
+let findUser id (p: IPorts) =
+  match id with
+  | 2 -> AsyncResult.error <| Unauthorized "user"
+  | id -> p.runQuery "query" { ID = id; Name = "Name"; Email = "email@email.com" }
+
+let findSettings id (p: IPorts) =
+  match id with
+  | 3 -> AsyncResult.error Conflict
+  | userID -> p.runQuery "query" { UserID = userID; AreNotificationsEnabled = true }
+
+let findDevice id (p: IPorts) =
+  match id with
+  | 4 -> AsyncResult.error <| NotFound "device"
+  | 7 -> failwith "A weird happenstance"
+  | userID -> p.runQuery "query" { UserID = userID; ID = userID + 7 }
 
 let program () : int -> Async<Result<Unit, DomainError>> =
   fun _ -> "not implmemented" |> InternalServerError |> AsyncResult.error
