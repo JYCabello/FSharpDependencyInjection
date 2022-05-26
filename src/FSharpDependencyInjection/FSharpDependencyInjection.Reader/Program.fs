@@ -19,8 +19,10 @@ let mapE (f: 'a -> 'b) (e: Effect<'a, 'e>) : Effect<'b, 'e> = fun p -> p |> e |>
 let bindE (f: 'a -> Async<Result<'b, 'e>>) (e: Effect<'a, 'e>) : Effect<'b, 'e> =
   fun p -> p |> e |> AsyncResult.bind f
 
-
-
+type GetUser = int -> Effect<User, DomainError>
+type GetSettings = int -> Effect<UserSettings, DomainError>
+type GetDevice = int -> Effect<Device, DomainError>
+type SendEmail = EmailEnvelope -> Effect<Unit, DomainError>
 
 
 let program () : int -> Async<Result<Unit, DomainError>> =
