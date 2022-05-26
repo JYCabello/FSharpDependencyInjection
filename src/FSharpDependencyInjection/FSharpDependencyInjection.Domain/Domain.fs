@@ -16,9 +16,7 @@ module DomainModel =
     { AreNotificationsEnabled: bool
       UserID: int }
 
-  type Device =
-    { UserID: int
-      ID: int }
+  type Device = { UserID: int; ID: int }
 
   type EmailEnvelope =
     { To: string

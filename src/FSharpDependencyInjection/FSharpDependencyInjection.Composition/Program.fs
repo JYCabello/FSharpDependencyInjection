@@ -1,4 +1,5 @@
 ﻿module FSharpDependencyInjection.Composition
+
 open FSharpDependencyInjection.Domain
 open FSharpDependencyInjection.Domain.DomainModel
 open FsToolkit.ErrorHandling
@@ -10,45 +11,63 @@ module Operations =
   type SendEmail = EmailEnvelope -> Async<Result<Unit, DomainError>>
 
 open Operations
+
 let trySendEmail
   (getUser: GetUser)
   (getSettings: GetSettings)
   (getDevice: GetDevice)
   (sendEmail: SendEmail)
-  userId =
-    asyncResult {
-      let! user = getUser userId
-      let! settings = getSettings userId
-      let! device = getDevice userId
-      
-      return!
-        match settings.AreNotificationsEnabled with
-        | false -> () |> AsyncResult.ok
-        | true -> sendEmail { To = user.Email; Subject = "Hi"; Body = $"Your device ID is {device.ID}" }
-    }
+  userId
+  =
+  asyncResult {
+    let! user = getUser userId
+    let! settings = getSettings userId
+    let! device = getDevice userId
+
+    return!
+      match settings.AreNotificationsEnabled with
+      | false -> () |> AsyncResult.ok
+      | true ->
+        sendEmail
+          { To = user.Email
+            Subject = "Hi"
+            Body = $"Your device ID is {device.ID}" }
+  }
 
 module Implementations =
   let findUser =
     function
     | 2 -> AsyncResult.error <| Unauthorized "user"
-    | id -> AsyncResult.ok { ID = id; Name = "Name"; Email = "email@email.com" }
-    
+    | id ->
+      AsyncResult.ok
+        { ID = id
+          Name = "Name"
+          Email = "email@email.com" }
+
   let findSettings =
     function
     | 3 -> Error Conflict
-    | userID -> Ok { UserID = userID; AreNotificationsEnabled = true }
-    
+    | userID ->
+      Ok
+        { UserID = userID
+          AreNotificationsEnabled = true }
+
   let findDevice =
     function
     | 4 -> Error <| NotFound "device"
     | 7 -> failwith "A weird happenstance"
     | userID -> Ok { UserID = userID; ID = userID + 7 }
-    
+
   let sendEmail (_: EmailEnvelope) = ()
 
 module CompositionalRoot =
   open Implementations
-  let trySendEmailComposed() =
-    trySendEmail findUser (findSettings >> Async.singleton) (findDevice >> Async.singleton) (sendEmail >> AsyncResult.ok)
 
-Endpoint.runOneToTen (CompositionalRoot.trySendEmailComposed())
+  let trySendEmailComposed () =
+    trySendEmail
+      findUser
+      (findSettings >> Async.singleton)
+      (findDevice >> Async.singleton)
+      (sendEmail >> AsyncResult.ok)
+
+Endpoint.runOneToTen (CompositionalRoot.trySendEmailComposed ())

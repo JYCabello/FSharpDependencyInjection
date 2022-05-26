@@ -11,10 +11,13 @@ type Ports =
   interface IPorts with
     member this.runQuery _ defaultValue = defaultValue |> AsyncResult.ok
     member this.sendEmail _ = () |> AsyncResult.ok
-  
-    
+
+
 
 let program () : int -> Async<Result<Unit, DomainError>> =
-  fun _ -> "not implmemented" |> InternalServerError |> AsyncResult.error
+  fun _ ->
+    "not implmemented"
+    |> InternalServerError
+    |> AsyncResult.error
 
 printfn "Hello from F#"
