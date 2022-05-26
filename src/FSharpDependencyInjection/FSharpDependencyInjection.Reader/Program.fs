@@ -12,12 +12,15 @@ type Ports =
     member this.runQuery _ defaultValue = defaultValue |> AsyncResult.ok
     member this.sendEmail _ = () |> AsyncResult.ok
 
+type Effect<'a> = IPorts -> Async<Result<'a, DomainError>>
+
+let mapE (f: 'a -> 'b) (e: Effect<'a>) : Effect<'b> = fun p -> p |> e |> AsyncResult.map f
+
+
+
 
 
 let program () : int -> Async<Result<Unit, DomainError>> =
-  fun _ ->
-    "not implmemented"
-    |> InternalServerError
-    |> AsyncResult.error
+  fun _ -> "not implmemented" |> InternalServerError |> AsyncResult.error
 
 printfn "Hello from F#"
