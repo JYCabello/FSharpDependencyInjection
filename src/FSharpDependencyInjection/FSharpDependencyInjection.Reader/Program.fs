@@ -12,9 +12,12 @@ type Ports =
     member this.runQuery _ defaultValue = defaultValue |> AsyncResult.ok
     member this.sendEmail _ = () |> AsyncResult.ok
 
-type Effect<'a> = IPorts -> Async<Result<'a, DomainError>>
+type Effect<'a, 'b> = IPorts -> Async<Result<'a, 'b>>
 
-let mapE (f: 'a -> 'b) (e: Effect<'a>) : Effect<'b> = fun p -> p |> e |> AsyncResult.map f
+let mapE (f: 'a -> 'b) (e: Effect<'a, 'e>) : Effect<'b, 'e> = fun p -> p |> e |> AsyncResult.map f
+
+let bindE (f: 'a -> Async<Result<'b, 'e>>) (e: Effect<'a, 'e>) : Effect<'b, 'e> =
+  fun p -> p |> e |> AsyncResult.bind f
 
 
 
