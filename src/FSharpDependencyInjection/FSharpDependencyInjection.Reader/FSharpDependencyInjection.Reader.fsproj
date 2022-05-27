@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Edge.fs" />
+        <Compile Include="Effects.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 

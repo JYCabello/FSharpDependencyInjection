@@ -1,4 +1,4 @@
-﻿module FSharpDependencyInjection.ReaderEdge
+﻿module FSharpDependencyInjection.Effects
 
 open FSharpDependencyInjection.Domain.DomainModel
 open FsToolkit.ErrorHandling
@@ -23,10 +23,10 @@ let bindE (f: 'a -> Effect<'b>) (e: Effect<'a>) : Effect<'b> =
       return! p |> f a
     }
 
-let askE (p: IPorts) = p |> AsyncResult.ok
+let getPorts (p: IPorts) = p |> AsyncResult.ok
 
 type EffectBuilder() =
-  member this.Bind(x: Effect<'a>, f) : Effect<'b> = bindE f x
+  member this.Bind(x: Effect<'a>, f: 'a -> Effect<'b>) : Effect<'b> = bindE f x
   member this.Return x : Effect<'a> = fun _ -> AsyncResult.ok x
   member this.ReturnFrom x = fun (_: IPorts) -> x
   member this.Zero() : Effect<Unit> = fun _ -> AsyncResult.ok ()

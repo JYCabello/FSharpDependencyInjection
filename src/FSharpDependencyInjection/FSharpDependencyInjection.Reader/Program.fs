@@ -1,20 +1,24 @@
 ﻿module FSharpDependencyInjection.Reader
 
 open FSharpDependencyInjection.Domain.DomainModel
+open FSharpDependencyInjection.Effects
 open FsToolkit.ErrorHandling
 
 module Program =
-  open ReaderEdge
+  let findUser id =
+    effect {
+      let! (p: IPorts) = getPorts
 
-  let findUser id (p: IPorts) =
-    match id with
-    | 2 -> AsyncResult.error <| Unauthorized "user"
-    | id ->
-      p.runQuery
-        "query"
-        { ID = id
-          Name = "Name"
-          Email = "email@email.com" }
+      return!
+        match id with
+        | 2 -> AsyncResult.error <| Unauthorized "user"
+        | id ->
+          p.runQuery
+            "query"
+            { ID = id
+              Name = "Name"
+              Email = "email@email.com" }
+    }
 
   let findSettings id (p: IPorts) =
     match id with
@@ -37,7 +41,7 @@ module Program =
         let! user = getUser userID
         let! settings = getSettings userID
         let! device = getDevice userID
-        let! p = askE
+        let! (p: IPorts) = getPorts
 
         return!
           match settings.AreNotificationsEnabled with
@@ -53,3 +57,5 @@ module Program =
 
   let program () : int -> Async<Result<Unit, DomainError>> =
     fun userID -> getProgram findUser findSettings findDevice () userID (Ports())
+
+printfn "Hi"
