@@ -14,7 +14,7 @@ module Program =
         | 2 -> AsyncResult.error <| Unauthorized "user"
         | id ->
           p.runQuery
-            "query"
+            $"SELECT * FROM Users WHERE id = {id}"
             { ID = id
               Name = "Name"
               Email = "email@email.com" }
@@ -25,7 +25,7 @@ module Program =
     | 3 -> AsyncResult.error Conflict
     | userID ->
       p.runQuery
-        "query"
+        $"SELECT * FROM UserSettings WHERE userID = {id}"
         { UserID = userID
           AreNotificationsEnabled = true }
 
@@ -33,7 +33,10 @@ module Program =
     match id with
     | 4 -> AsyncResult.error <| NotFound "device"
     | 7 -> failwith "A weird happenstance"
-    | userID -> p.runQuery "query" { UserID = userID; ID = userID + 7 }
+    | userID ->
+      p.runQuery
+        $"SELECT * FROM UserSettings WHERE userID = {id}"
+        { UserID = userID; ID = userID + 7 }
 
   let private getProgram getUser getSettings getDevice () =
     let trySendDeviceID userID : Effect<_> =
