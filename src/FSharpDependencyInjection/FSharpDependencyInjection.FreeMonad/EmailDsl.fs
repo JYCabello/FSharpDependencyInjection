@@ -2,8 +2,7 @@
 
 open FSharpDependencyInjection.Domain.DomainModel
 
-type EmailInstructions<'a> =
-| Send of (EmailEnvelope * (Unit -> 'a))
+type EmailInstructions<'a> = Send of (EmailEnvelope * (Unit -> 'a))
 
 let mapEmail f =
   function

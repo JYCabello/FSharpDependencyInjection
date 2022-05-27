@@ -1,4 +1,5 @@
 ﻿module FSharpDependencyInjection.FreeMonad
+
 open FSharpDependencyInjection.Domain
 open FSharpDependencyInjection.Domain.DomainModel
 open DSL
@@ -13,15 +14,18 @@ let trySendDeviceViaEmail userID =
 
     return!
       match settings.AreNotificationsEnabled with
-      | false -> Pure ()
-      | true -> send { To = user.Email; Subject = "Hi"; Body = $"Your device ID is {device.ID}" }
+      | false -> Pure()
+      | true ->
+        send
+          { To = user.Email
+            Subject = "Hi"
+            Body = $"Your device ID is {device.ID}" }
   }
 
 let buildInterpreter () =
   Interpreters.build Interpreters.User.interpreter Interpreters.Email.interpreter
 
 let program id =
-  trySendDeviceViaEmail id
-  |> buildInterpreter ()
+  trySendDeviceViaEmail id |> buildInterpreter ()
 
 Endpoint.runOneToTen program
